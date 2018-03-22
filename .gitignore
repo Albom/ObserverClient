@@ -299,7 +299,6 @@ __pycache__/
 *.xsd.cs
 
 # Ignore
-config/
 data/
 *.csv
 *.png

@@ -1,0 +1,4 @@
+pathAddresses = config/addresses
+pathData = data
+pathSensors = config/sensors
+period = 30
