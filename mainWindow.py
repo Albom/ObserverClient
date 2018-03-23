@@ -1,32 +1,26 @@
 #!/usr/bin/python3
 import sys
-import os
-import requests
 
-from datetime import datetime
-from PyQt5.QtWidgets import (QSplashScreen, QWidget, QAction, QStyleFactory, QSizePolicy, QLabel, QLineEdit, QPushButton,
+from PyQt5.QtWidgets import (QWidget, QAction, QLabel, QLineEdit, QPushButton,
     QTextEdit, QGridLayout, QCheckBox, QMainWindow, QApplication, QTableWidget, QTableWidgetItem)
 from PyQt5.QtCore import (Qt, QBasicTimer)
 from PyQt5.QtGui import QIntValidator
-from operator import xor
-import time
 
 
 
 class MainWindow(QMainWindow):
     """MainWindow(QMainWindow)"""
     def __init__(self, core):
-
         super().__init__()
         self.core = core
         self.core.logged.connect(self.onLogged)
+
         self.initUI()
 
 
 
     def initUI(self):
         """initUI(self)"""
-        time.sleep(10)
         actionFileSave = QAction('&Save', self)
         actionFileSave.triggered.connect(self.core.save)
         actionFileDraw = QAction('&Draw', self)
@@ -65,13 +59,10 @@ class MainWindow(QMainWindow):
         self.btnClear = QPushButton('Clear', self)
         self.btnClear.clicked.connect(self.textEdit.clear)
 
-        #self.btnOk = QPushButton('Ok', self)
-
         self.isItemSave = False
         self.table = QTableWidget(0, 3)
         self.table.setToolTip("Temperature sensors.")
         #self.table.setFixedSize(262, 325)
-
         self.table.setFixedWidth(262)
         self.table.setVerticalScrollBarPolicy(1)
         self.table.setHorizontalScrollBarPolicy(1)
@@ -86,8 +77,6 @@ class MainWindow(QMainWindow):
         self.table.verticalHeader().setDefaultAlignment(Qt.AlignRight)
         self.table.itemClicked.connect(self.checkItemSave)
         self.table.itemChanged.connect(self.itemSave)
-        hh = self.table.horizontalHeader()
-        hh.clicked.connect(self.onHeaderClicked)
         
         grid = QGridLayout()
         grid.setSpacing(3)
@@ -190,23 +179,18 @@ class MainWindow(QMainWindow):
 
     def onDataAdded(self):
         """onDataAdded()"""
-        #self.table.setRowCount(len(self.core.sensors))
+
+        self.table.setRowCount(len(self.core.sensors))
+        if self.table.rowCount() <= 20:
+            self.table.setMinimumHeight(25 + self.table.rowCount() * 23)
         i = 0
         for key in self.core.sensors.keys():
             if self.core.sensors[key][1] != '':
-                #self.table.row(0).
-                self.table.setRowCount(i + 1)
                 self.table.setRowHeight(i, 23)
-                if self.table.rowCount() <= 20:
-                    self.table.setMinimumHeight(25 + self.table.rowCount() * 23)
                 self.table.setItem(i, 0, QTableWidgetItem(self.core.sensors[key][1]))
                 self.table.setItem(i, 1, QTableWidgetItem(self.core.sensors[key][0]))
                 self.table.setItem(i, 2, QTableWidgetItem(key))
                 #self.table.item(i, 1).setBackground(Qt.red)
                 i += 1
+        self.table.setRowCount(i)
         self.table.sortItems(1)
-
-    def onHeaderClicked(self, index):
-        """onHeaderClicked()"""
-        print(indexSS)
-        self.table.sortItems(index)

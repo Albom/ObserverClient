@@ -16,10 +16,10 @@ class ThreadGet(QtCore.QThread):
 
 
     def run(self):
-        """run()"""
+        """run() - основная функция потока."""
         try:
             timeBegin = datetime.now()
-            print('Request to {0}'.format(self.address))
+            #print('Request to {0}'.format(self.address))
             request = requests.get('http://{0}'.format(self.address))
             timeEnd = datetime.now()
             delta = self.deltaTimeStr(timeBegin, timeEnd)
@@ -49,6 +49,7 @@ class ThreadGet(QtCore.QThread):
 
 
     def deltaTimeStr(self, begin, end):
+        """deltaTimeStr(begin, end) - вернуть разницу во времени в строковом виде."""
         delta = end - begin
         deltaStr = str(delta.total_seconds())
         delimeter = deltaStr.find('.')

@@ -5,7 +5,8 @@ from PyQt5 import QtCore
 import threadGet
 from datetime import datetime
 import matplotlib.pyplot as plt
-#import matplotlib as mpl
+
+
 
 class Observer(QtCore.QObject):
     """class Observer - ядро программы."""
@@ -187,10 +188,6 @@ class Observer(QtCore.QObject):
                         mlist[temp[0]] = ['No name', temp[1]]
                     file.write('{0};{1};{2};{3}\n'.format(date.strftime('%H:%M:%S'), temp[0], mlist[temp[0]][0], mlist[temp[0]][1]))
         self.dataAdded.emit()
-                #with open(request_start.strftime('%Y') + '\\' + request_start.strftime('%m') + '\\' + request_start.strftime('%Y.%m.%d') + '.csv', 'a') as file:
-                #    file.write(record)
-            #print(line)
-        #print(mlist)
 
 
 
@@ -211,31 +208,11 @@ class Observer(QtCore.QObject):
         thread.finished.connect(self.onFinished, QtCore.Qt.QueuedConnection)
         self.threads.append(thread)
         thread.start()
-        #for address in self.addresses.keys():
-        #    try:
-        #        print("Get {0}".format(address))
-        #        request = requests.get('http://' + address)
 
-        #        if request.status_code == 200:
-        #            temp = request.text
-        #            print(temp)
-        #        elif int(request.status_code / 100) == 1:
-        #            print("{0}: Informational".format(request.status_code))
-        #        elif int(request.status_code / 100) == 2:
-        #            print("{0}: Success".format(request.status_code))
-        #        elif int(request.status_code / 100) == 3:
-        #            print("{0}: Redirection ".format(request.status_code))
-        #        elif int(request.status_code / 100) == 4:
-        #            print("{0}: Client Error".format(request.status_code))
-        #        elif int(request.status_code / 100) == 5:
-        #            print("{0}: Server Error".format(request.status_code))
-
-        #    except requests.RequestException as error:
-        #        print(error)
         
 
     def draw(self):
-        """draw("""
+        """draw()"""
         x = []
         y = []
         with open('2018.03.22.csv', 'r') as file:
@@ -246,13 +223,12 @@ class Observer(QtCore.QObject):
                     time = float(t[0]) + float(int(t[1]) * 60 + int(t[2])) / 3600
                     x.append(time)
                     y.append(int(temp[3]))
-
-        plt.figure(figsize = (16, 9), dpi = 120)
+        plt.figure(figsize = (16, 9), dpi = 80) #hd: dpi = 80; fullhd: dpi = 120; 4k: dpi = 240
         plt.yticks(range(-30, 40, 5), )
         plt.xticks(range(0, 24))
         plt.plot(x, y, color = 'red', label = 'Opened')
         plt.plot([0, 24], [0, 0], color = 'black')
-        plt.ylim(-30, 40)
+        plt.ylim(-35, 40)
         plt.xlim(0, 24)
         plt.title('Temperature')
         plt.xlabel('Decimal time')
@@ -262,4 +238,3 @@ class Observer(QtCore.QObject):
         plt.grid(True, which = 'minor', color = 'lightgrey')
         plt.minorticks_on()
         plt.savefig('{}.{}'.format('Opened', 'png'))
-        #pic.show()
