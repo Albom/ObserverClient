@@ -3,14 +3,16 @@ from PyQt5 import QtCore
 import requests
 from datetime import datetime
 
+
+
 class ThreadGet(QtCore.QThread):
     """class ThreadGet - поток получения запроса"""
     requestReceived = QtCore.pyqtSignal(list, str, str, datetime)     # Сигнал получения запроса
     requestFailed = QtCore.pyqtSignal(str, str, datetime)                   # Сигнал ошибки
 
 
-    def __init__(self, address, parent = None):
-        """__init__(address, parent = None)"""
+    def __init__(self, address):
+        """__init__(address)"""
         super().__init__()
         self.address = address
 

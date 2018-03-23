@@ -29,6 +29,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.py" />
+    <Compile Include="threadChart.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="threadGet.py">
       <SubType>Code</SubType>
     </Compile>
