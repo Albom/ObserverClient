@@ -302,3 +302,4 @@ __pycache__/
 data/
 *.csv
 *.png
+*.log

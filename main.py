@@ -11,4 +11,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     core = observer.Observer()
     ex = mainWindow.MainWindow(core)
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

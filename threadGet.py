@@ -11,17 +11,18 @@ class ThreadGet(QtCore.QThread):
     requestFailed = QtCore.pyqtSignal(str, str, datetime)                   # Сигнал ошибки
 
 
+
     def __init__(self, address):
         """__init__(address)"""
         super().__init__()
         self.address = address
 
 
+
     def run(self):
         """run() - основная функция потока."""
         try:
             timeBegin = datetime.now()
-            #print('Request to {0}'.format(self.address))
             request = requests.get('http://{0}'.format(self.address))
             timeEnd = datetime.now()
             delta = self.deltaTimeStr(timeBegin, timeEnd)

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import sys
-
+import os
 from PyQt5.QtWidgets import (QWidget, QAction, QLabel, QLineEdit, QPushButton,
     QTextEdit, QGridLayout, QCheckBox, QMainWindow, QApplication, QTableWidget, QTableWidgetItem)
 from PyQt5.QtCore import (Qt, QBasicTimer)
@@ -14,7 +14,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.core = core
         self.core.logged.connect(self.onLogged)
-
         self.initUI()
 
 
@@ -37,11 +36,12 @@ class MainWindow(QMainWindow):
         menuSensors.addAction(actionSensorsAdd)
         menuSensors.addAction(actionSensorsDel)
         self.menuBar().addAction(actionAbout)
+        #self.menuBar().hovered.connect(self.statusBar().showMessage)
 
-        self.statusBar().showMessage('Приложение запущено.')
+        
 
         self.periodLabel = QLabel('Период опроса, сек.:')
-        self.periodEdit = QLineEdit(self.core.period)
+        self.periodEdit = QLineEdit(str(self.core.period))
         self.periodEdit.setValidator(QIntValidator())
         
         self.checkBox = QCheckBox('Имена и значения')
@@ -98,6 +98,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Observer')
         self.show()
         self.core.dataAdded.connect(self.onDataAdded)
+        self.statusBar().showMessage('Application is runnig.')
 
         if len(sys.argv) > 1:
             if sys.argv[1] == '-s':
@@ -108,20 +109,28 @@ class MainWindow(QMainWindow):
         
 
 
+    def closeEvent(self, event):
+        self.core.stop()
+        super().closeEvent(event)
+
+
+
     def onStartStop(self):
         """onStartStop()"""
         if self.core.timer.isActive():
             self.core.stop()
             self.periodEdit.setEnabled(True)
             self.btnStartStop.setText('Start')
-            self.statusBar().showMessage('Остановлено.')     
+            #self.statusBar().showMessage('Остановлено.')     
         else:
             self.core.period = self.periodEdit.text()
             self.periodEdit.setEnabled(False)
             self.btnStartStop.setText('Stop')
-            self.statusBar().showMessage('Запущено...')
+            #self.statusBar().showMessage('Запущено...')
             self.table.clearContents()
             self.core.start()
+    
+    
 
 
 
@@ -158,22 +167,25 @@ class MainWindow(QMainWindow):
                     self.statusBar().showMessage(item.text() + " save")
                     temp = self.table.item(item.row(), 2)
                     key = temp.text()
-                    self.core.sensors[key][0] = item.text()
-                    #self.core.save()
-                    print(key)
+                    self.core.sensors[key].name = item.text()
         self.table.clearSelection()
                 
-    def onLogged(self, log):
-        """onLogged(log, mode)"""
-        self.textEdit.append(log)
-        #for mode in modes:
-        #    if mode == 'l':
-        #        self.textEdit.append(log)
-        #    elif mode == 's':
-        #        self.statusBar().showMessage(log)
-        #    elif mode == 'f':
-        #        os.makedirs(directory, 0o777, True)
-        #        with open('{0}\\{1}.csv'.format(directory, date.strftime('%Y.%m.%d')), 'a') as file:
+    def onLogged(self, log, modes):
+        """onLogged(log, modes)"""
+        if 'l' in modes:
+            if len(self.textEdit.toPlainText()) > 100000:
+                self.textEdit.setPlainText(self.textEdit.toPlainText()[20000:])
+            self.textEdit.append(log)
+
+        if 's' in modes:
+            self.statusBar().showMessage(log)
+
+        if 'f' in modes:
+            directory = '{0}\\{1}\\{2}\\{3}'.format(self.core.pathData, self.core.currentDate.strftime('%Y'), self.core.currentDate.strftime('%m'), self.core.currentDate.strftime('%d'))
+            os.makedirs(directory, 0o777, True)
+            with open('{0}\\{1}.log'.format(directory, self.core.currentDate.strftime('%Y.%m.%d')), 'a') as file:
+                file.write(log + '\n')
+                file.close()
          
 
 
@@ -185,12 +197,11 @@ class MainWindow(QMainWindow):
             self.table.setMinimumHeight(25 + self.table.rowCount() * 23)
         i = 0
         for key in self.core.sensors.keys():
-            if self.core.sensors[key][1] != '':
+            if self.core.sensors[key].value != None:
                 self.table.setRowHeight(i, 23)
-                self.table.setItem(i, 0, QTableWidgetItem(self.core.sensors[key][1]))
-                self.table.setItem(i, 1, QTableWidgetItem(self.core.sensors[key][0]))
+                self.table.setItem(i, 0, QTableWidgetItem(self.core.sensors[key].value))
+                self.table.setItem(i, 1, QTableWidgetItem(self.core.sensors[key].name))
                 self.table.setItem(i, 2, QTableWidgetItem(key))
-                #self.table.item(i, 1).setBackground(Qt.red)
                 i += 1
         self.table.setRowCount(i)
         self.table.sortItems(1)
