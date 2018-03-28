@@ -240,10 +240,6 @@ class Observer(QtCore.QObject):
             if self.addresses[address] != 'No name': 
                 address = self.addresses[address]
         self.logged.emit('{0} received ({1} s).'.format(address, delta), 'l')
-        #if lines[0] == 'Temperatures':
-        #    self.addData(self.temperatures, lines[1:])
-        #elif lines[0] == 'Consumptions':
-        #    self.addData(self.consumptions, lines[1:])
 
 
 

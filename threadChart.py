@@ -33,6 +33,7 @@ class ThreadChart(QtCore.QThread):
             try:
                 with open(path, 'r') as file:
                     for line in file:
+                        line = line.replace('\n', '')
                         temp = line.split(';')
                         if len(temp[1]) >= 4:
                             t = temp[0].split(':')
@@ -43,11 +44,10 @@ class ThreadChart(QtCore.QThread):
                                 name = temp[1]
                             if name in sensors:
                                 sensors[name][0].append(time)
-                                sensors[name][1].append(int(temp[3]))
+                                sensors[name][1].append(float(temp[3]))
                             else:
-                                sensors[name] = [[time], [int(temp[3])]]
-                #plt.figure(figsize = (10, 10), dpi = 64) # 12x12 inch, 1280x1280: dpi = 106.67;
-                plt.figure(figsize = (10, 10), dpi = 64) # 10x10 inch, 640x640: dpi = 64;
+                                sensors[name] = [[time], [float(temp[3])]]
+                plt.figure(figsize = (10, 10), dpi = 64) # 10x10 inch, 640x640: dpi = 64; 12x12 inch, 1280x1280: dpi = 106.67;
 
                 plt.suptitle(self.name, fontsize = 24)
                 # График температур
@@ -82,7 +82,8 @@ class ThreadChart(QtCore.QThread):
 
                 plt.savefig('{}\\{}.png'.format(self.pathData, self.name))
                 self.chartSaved.emit('Chart saved to {}.png.'.format(self.name))
-            except Exception:
+            except Exception as e:
+                print(e)
                 self.chartSaved.emit('Chart not saved!')
 
 
