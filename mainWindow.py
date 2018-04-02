@@ -104,12 +104,12 @@ class MainWindow(QMainWindow):
         self.table = QTableWidget(0, 3)
         self.table.setToolTip("Temperature sensors.")
         #self.table.setFixedSize(262, 325)
-        self.table.setFixedWidth(262)
+        self.table.setFixedWidth(342)
         self.table.setVerticalScrollBarPolicy(1)
         self.table.setHorizontalScrollBarPolicy(1)
-        self.table.setColumnWidth(0, 30)
-        self.table.setColumnWidth(1, 100)
-        self.table.setColumnWidth(2, 110)
+        self.table.setColumnWidth(0, 50)
+        self.table.setColumnWidth(1, 150)
+        self.table.setColumnWidth(2, 120)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
@@ -128,7 +128,7 @@ class MainWindow(QMainWindow):
         widget.setLayout(grid)
         self.setCentralWidget(widget)
 
-        self.setGeometry(300, 200, 500, 400)
+        self.setGeometry(300, 200, 600, 400)
         self.setWindowFlags(Qt.MSWindowsFixedSizeDialogHint)
         self.statusBar().setSizeGripEnabled(False)
         self.setWindowTitle('Observer')
@@ -140,9 +140,8 @@ class MainWindow(QMainWindow):
             if sys.argv[1] == '-s':
                 if len(sys.argv) > 2:
                     if sys.argv[2].isdigit():
-                        self.periodEdit.setText(sys.argv[2])
-                self.actionFileStart.trigger()
-                self.btnStartStop.click()  
+                        self.core.period = sys.argv[2]
+                    self.actionFileStart.trigger()
         
 
 
@@ -241,13 +240,13 @@ class MainWindow(QMainWindow):
         if self.actionViewInfo.isChecked():
             self.table.setColumnHidden(1, False)
             self.table.setColumnHidden(2, False)
-            self.table.setFixedWidth(self.table.width() + 210)
-            self.setFixedWidth(self.width() + 210)
+            self.table.setFixedWidth(self.table.width() + 270)
+            self.setFixedWidth(self.width() + 270)
         else:
             self.table.setColumnHidden(1, True)
             self.table.setColumnHidden(2, True)
-            self.table.setFixedWidth(self.table.width() - 210)
-            self.setFixedWidth(self.width() - 210)
+            self.table.setFixedWidth(self.table.width() - 270)
+            self.setFixedWidth(self.width() - 270)
     
 
 
