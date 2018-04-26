@@ -31,39 +31,52 @@ class Observer(QtCore.QObject):
 
         self.period = 60
         self.threads = []
-        self.timer = QtCore.QBasicTimer()
+        #self.chart
+        self.timerRequests = QtCore.QTimer()
+        self.timerRequests.timeout.connect(self.timerRequestsEvent)
+        self.timerChart = QtCore.QTimer()
+        self.timerChart.timeout.connect(self.timerChartEvent)
         self.read()
     
 
 
     def start(self):
         """start() - начать мониторинг и запустить таймер."""
-        if not self.timer.isActive():
+        if not (self.timerRequests.isActive() and self.timerChart.isActive()):
             self.checkCurrentDay(datetime.now())
             self.configSave()
             self.logged.emit('{} Observation started:'.format(datetime.now().strftime('%H:%M:%S')), 'lf')
             self.read()
-            self.timer.start(int(self.period) * 1000, self)
-            self.timerEvent(self.timer)
+            self.timerRequests.start(int(self.period) * 1000)
+            self.timerChart.start(int(self.period) * 1000 * 4)
+            self.timerRequestsEvent()
+            #self.timerChartEvent(self.timerChart)
     
 
 
     def stop(self):
         """stop() - остановить мониторинг и таймер."""
-        if self.timer.isActive():
-            self.timer.stop()
+        if self.timerRequests.isActive() and self.timerChart.isActive():
+            self.timerRequests.stop()
+            self.timerChart.stop()
             text = '{} Observation stopped.'.format(datetime.now().strftime('%H:%M:%S'))
             self.logged.emit('\n{}'.format(text), 'l')
             self.logged.emit(text, 'f')
 
 
 
-    def timerEvent(self, timer):
+    def timerRequestsEvent(self):
         """timerEvent(timer) - событие таймера."""
         self.sendRequests()
 
-    
 
+
+    def timerChartEvent(self):
+        """timerChartEvent(timer) - событие таймера."""
+        self.draw()
+        
+    
+   
     def checkCurrentDay(self, date):
         """checkCurrentDay()"""
         if  self.currentDate.date() != date.date():
@@ -264,20 +277,26 @@ class Observer(QtCore.QObject):
         try:
             with open('{0}\\{1}.csv'.format(directory, name), 'a') as file:
                 for line in lines:
-                    temp = line.split(' ')
-                    if len(temp) == 2:
-                        if temp[0] in self.sensors.keys():
-                            self.sensors[temp[0]].value = temp[1]
-                        else:
-                            group = 'unknown'
-                            ss = sensor.Sensor(temp[0], group, 'No name', temp[1])
-                            self.sensors[temp[0]] = ss
-                            if group in self.groups:
-                                self.groups[group].add(ss)
+                    #if line != ' ':
+                        temp = line.split(' ')
+                        if len(temp) == 2:
+                            #temp[1] = temp[1].replace('\0', '');
+                            #temp[1] = temp[1].replace('\n', '');
+                            temp[1] = temp[1].replace('\r', '');
+                            if temp[0] in self.sensors.keys():
+                                self.sensors[temp[0]].value = temp[1]
+                                #sprint('"{}" "{}"'.format(temp[0], temp[1]));
+                                #temp[1] = temp[1].replace('\0', '');
                             else:
-                                self.groups[group] = {ss}
+                                group = 'Unknown'
+                                ss = sensor.Sensor(temp[0], group, 'No name', temp[1])
+                                self.sensors[temp[0]] = ss
+                                if group in self.groups:
+                                    self.groups[group].add(ss)
+                                else:
+                                    self.groups[group] = {ss}
 
-                        file.write('{0};{1};{2};{3}\n'.format(date.strftime('%H:%M:%S'), temp[0], self.sensors[temp[0]].name, self.sensors[temp[0]].value))
+                            file.write('{0};{1};{2};{3}\n'.format(date.strftime('%H:%M:%S'), temp[0], self.sensors[temp[0]].name, self.sensors[temp[0]].value))
             self.dataAdded.emit()
         except Exception:
             self.logged.emit('{} Data not saved to {}!'.format(date.strftime('%H:%M:%S'), name), 'lsf')
@@ -300,7 +319,7 @@ class Observer(QtCore.QObject):
         else:
             text += '...'
         self.logged.emit(text, 's')
-                
+
 
 
     def onChartSaved(self, message):

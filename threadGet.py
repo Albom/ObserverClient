@@ -27,12 +27,13 @@ class ThreadGet(QtCore.QThread):
             timeEnd = datetime.now()
             delta = self.deltaTimeStr(timeBegin, timeEnd)
             if request.status_code == 200:
-                temp = request.text.split('\n')
-                try:
-                    temp.remove('')
-                except Exception:
-                    pass
-                self.requestReceived.emit(temp, self.address, delta, timeBegin)
+                if len(request.text) > 0:
+                    temp = request.text.split('\n')
+                    try:
+                        temp.remove('')
+                    except Exception:
+                        pass
+                    self.requestReceived.emit(temp, self.address, delta, timeBegin)
             elif int(request.status_code / 100) == 1:
                 print("{0}: Informational".format(request.status_code))
             elif int(request.status_code / 100) == 2:
