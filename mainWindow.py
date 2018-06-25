@@ -270,8 +270,6 @@ class MainWindow(QMainWindow):
                     key = temp.text()
                     self.core.sensors[key].name = item.text()
         self.table.clearSelection()
-                
-
 
     def onLogged(self, log, modes):
         """onLogged(log, modes)"""
@@ -288,9 +286,6 @@ class MainWindow(QMainWindow):
             os.makedirs(directory, 0o777, True)
             with open('{0}\\{1}.log'.format(directory, self.core.currentDate.strftime('%Y.%m.%d')), 'a') as file:
                 file.write(log + '\n')
-                file.close()
-         
-
 
     def onDataAdded(self):
         """onDataAdded()"""

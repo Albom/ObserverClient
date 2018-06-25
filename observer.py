@@ -2,10 +2,13 @@
 import requests
 import os
 from PyQt5 import QtCore
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import threadGet
+import threadServer
 import threadChart
+import threadMail
+import time
 import sensor
 
 
@@ -20,6 +23,7 @@ class Observer(QtCore.QObject):
         QtCore.QObject.__init__(self)
         self.pathAddresses = "config/addresses"
         self.pathConfig = "config/config"
+        self.pathEmails = 'config/emails'
         self.pathFolder = 'config'
         self.pathData = "data"
         self.pathSensors = "config/sensors"
@@ -30,12 +34,23 @@ class Observer(QtCore.QObject):
         self.groups = {}
 
         self.period = 60
+        self.countPeriod = 2
         self.threads = []
-        #self.chart
+        self.emails = ((0, 0), (8, 0), (12, 0), (16, 0))
+        self.email = threadMail.ThreadMail()
+        self.email.mailReceived.connect(self.mailReceivedEvent)
+        self.email.mailFailed.connect(self.mailFailedEvent)
+
+        self.chart = threadChart.ThreadChart()
+        self.chart.chartSaved.connect(self.onChartSaved, QtCore.Qt.QueuedConnection)
+        # self.chart.finished.connect(self.chart.deleteLater, QtCore.Qt.QueuedConnection)
+
         self.timerRequests = QtCore.QTimer()
         self.timerRequests.timeout.connect(self.timerRequestsEvent)
         self.timerChart = QtCore.QTimer()
         self.timerChart.timeout.connect(self.timerChartEvent)
+        self.timerMail = QtCore.QTimer()
+        self.timerMail.timeout.connect(self.timerMailEvent)
         self.read()
     
 
@@ -43,12 +58,14 @@ class Observer(QtCore.QObject):
     def start(self):
         """start() - начать мониторинг и запустить таймер."""
         if not (self.timerRequests.isActive() and self.timerChart.isActive()):
-            self.checkCurrentDay(datetime.now())
+            now = datetime.now()
+            self.checkCurrentDay(now)
             self.configSave()
-            self.logged.emit('{} Observation started:'.format(datetime.now().strftime('%H:%M:%S')), 'lf')
+            self.logged.emit('{} Observation started:'.format(now.strftime('%H:%M:%S')), 'lf')
             self.read()
             self.timerRequests.start(int(self.period) * 1000)
-            self.timerChart.start(int(self.period) * 1000 * 4)
+            self.timerChart.start(int(self.period) * 1000 * self.countPeriod)
+
             self.timerRequestsEvent()
             #self.timerChartEvent(self.timerChart)
     
@@ -76,14 +93,35 @@ class Observer(QtCore.QObject):
         self.draw()
         
     
+    def timerMailEvent(self):
+        self.email.start()
+        self.timerMail.setInterval()
+    
    
     def checkCurrentDay(self, date):
         """checkCurrentDay()"""
-        if  self.currentDate.date() != date.date():
+        if self.currentDate.date() != date.date():
             self.draw()
+            # self.send_mail()
             self.currentDate = date
             self.logged.emit('New day {}.'.format(self.currentDate.strftime('%Y.%m.%d')), 'l')
 
+
+    def checkCurrentTime(self):
+        period = int(self.period)
+        countPeriod = int(self.countPeriod)
+
+        def check(curr, new):
+            need1 = datetime(now.year, now.month, now.day, new[0], new[1], 0)
+            need2 = need1 + timedelta(seconds=period * countPeriod)
+            # print(need1.time(), '-', need2.time())
+            return (curr >= need1) and (curr < need2)
+
+        now = datetime.now()
+        for tt in self.emails:
+            if check(now, tt):
+                return True
+        return False
 
 
     def sendRequests(self):
@@ -99,6 +137,7 @@ class Observer(QtCore.QObject):
         self.checkCurrentDay(timeBegin)
         for address in self.addresses:
             self.get(address)
+        self.getServer()
 
 
 
@@ -235,6 +274,7 @@ class Observer(QtCore.QObject):
         self.configRead()
         self.addressesRead()
         self.sensorsRead()
+        # self.emailsRead()
     
 
 
@@ -254,8 +294,6 @@ class Observer(QtCore.QObject):
                 address = self.addresses[address]
         self.logged.emit('{0} received ({1} s).'.format(address, delta), 'l')
 
-
-
     def onRequestFailed(self, address, delta, time):
         """onRequestFailed(address, delta)"""
         if address in self.addresses:
@@ -263,10 +301,7 @@ class Observer(QtCore.QObject):
                 address = self.addresses[address]
         self.requestsFailedCount += 1
         self.logged.emit('{0} failed ({1} s)!'.format(address, delta), 'l')
-        self.logged.emit('{0} request to {1} failed ({2} s)!'.format(time.strftime('%H:%M:%S'), address, delta), 'f')
-
-
-
+        self.logged.emit('{0} Request to {1} failed ({2} s)!'.format(time.strftime('%H:%M:%S'), address, delta), 'f')
 
     def addData(self, lines, date):
         """addData(mlist, lines) - добавить данные в указанный список."""
@@ -301,8 +336,6 @@ class Observer(QtCore.QObject):
         except Exception:
             self.logged.emit('{} Data not saved to {}!'.format(date.strftime('%H:%M:%S'), name), 'lsf')
 
-
-
     def onFinished(self):
         """onFinished() - событие завершения потока: удалить поток."""
         for thread in self.threads:
@@ -320,12 +353,12 @@ class Observer(QtCore.QObject):
             text += '...'
         self.logged.emit(text, 's')
 
-
-
     def onChartSaved(self, message):
         """onChartSaved(message)"""
         self.logged.emit(message, 'ls')
-
+        if self.checkCurrentTime():
+            print('send...')
+            self.send_mail()
 
 
     def get(self, address):
@@ -337,11 +370,28 @@ class Observer(QtCore.QObject):
         self.threads.append(thread)
         thread.start()
 
-        
 
+    def getServer(self):
+        thread = threadServer.ThreadServer()
+        thread.requestReceived.connect(self.onRequestReceived, QtCore.Qt.QueuedConnection)
+        thread.requestFailed.connect(self.onRequestFailed, QtCore.Qt.QueuedConnection)
+        thread.finished.connect(self.onFinished, QtCore.Qt.QueuedConnection)
+        self.threads.append(thread)
+        thread.start()
+
+     
     def draw(self):
         """draw()"""
-        self.chart = threadChart.ThreadChart(self.pathData, self.currentDate)
-        self.chart.chartSaved.connect(self.onChartSaved, QtCore.Qt.QueuedConnection)
-        self.chart.finished.connect(self.chart.deleteLater, QtCore.Qt.QueuedConnection)
+        self.chart.set_path(self.pathData, self.currentDate)
         self.chart.start()
+
+    def send_mail(self):
+        self.email.set_path(self.pathData, self.currentDate)
+        self.email.start()
+
+    def mailReceivedEvent(self, message, s):
+        self.logged.emit('{} ({})'.format(message, s), 'ls')
+
+    def mailFailedEvent(self, message, time, s):
+        self.logged.emit('{} ({})'.format(message, s), 'l')
+        self.logged.emit('{} {} ({})'.format(time.strftime('%H:%M:%S'), message, s), 'sf')

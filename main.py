@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 import sys
-from PyQt5.QtWidgets import (QApplication)
+from PyQt5.QtWidgets import QApplication
 
 import mainWindow
 import observer
-
 
 
 if __name__ == '__main__':
