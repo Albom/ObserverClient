@@ -4,6 +4,7 @@ from datetime import datetime
 from smtplib import SMTP_SSL
 from email.message import EmailMessage
 
+# https://gist.github.com/turicas/1455741
 
 class ThreadMail(QtCore.QThread):
     """class ThreadMail"""
@@ -35,20 +36,20 @@ class ThreadMail(QtCore.QThread):
         message['To'] = self.address
         message['Subject'] = 'Мониторинг радара.'
         message.set_content(self.name)
-        with open('{}\\{}.png'.format(self.path, self.name), 'rb') as file:
-            img = file.read()
-            message.add_attachment(img, maintype='image', subtype='png')
-            try:
+        try:
+            with open('{}\\{}.png'.format(self.path, self.name), 'rb') as file:
+                img = file.read()
+                message.add_attachment(img, maintype='image', subtype='png')
+
                 with SMTP_SSL(self.url, self.port, timeout=10) as server:
                     server.ehlo()
                     server.login(self.username, self.password)
                     server.send_message(message)
-
                 end = datetime.now()
                 self.mailReceived.emit('Email sent.', self.deltaTimeStr(begin, end))
-            except:
-                end = datetime.now()
-                self.mailFailed.emit('Email don`t sent!', begin, self.deltaTimeStr(begin, end))
+        except:
+            end = datetime.now()
+            self.mailFailed.emit('Email don`t sent!', begin, self.deltaTimeStr(begin, end))
 
     def deltaTimeStr(self, begin, end):
         """deltaTimeStr(begin, end) - вернуть разницу во времени в строковом виде."""

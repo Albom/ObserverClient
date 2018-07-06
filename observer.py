@@ -36,7 +36,7 @@ class Observer(QtCore.QObject):
         self.period = 60
         self.countPeriod = 2
         self.threads = []
-        self.emails = ((0, 0), (8, 0), (12, 0), (16, 0))
+        self.emails = ((12, 0),)
         self.email = threadMail.ThreadMail()
         self.email.mailReceived.connect(self.mailReceivedEvent)
         self.email.mailFailed.connect(self.mailFailedEvent)
@@ -102,7 +102,7 @@ class Observer(QtCore.QObject):
         """checkCurrentDay()"""
         if self.currentDate.date() != date.date():
             self.draw()
-            # self.send_mail()
+            self.send_mail()
             self.currentDate = date
             self.logged.emit('New day {}.'.format(self.currentDate.strftime('%Y.%m.%d')), 'l')
 

@@ -1,5 +1,5 @@
-currentDate = 2018.06.25
+currentDate = 2018.07.06
 pathAddresses = config/addresses
 pathData = data
 pathSensors = config/sensors
-period = 30
+period = 60

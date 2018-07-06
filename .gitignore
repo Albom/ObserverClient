@@ -300,6 +300,7 @@ __pycache__/
 
 # Ignore
 .vscode/
+config/
 data/
 *.csv
 *.png
