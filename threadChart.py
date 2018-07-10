@@ -79,6 +79,9 @@ class ThreadChart(QtCore.QThread):
                             else:
                                 name = temp[1]
                             if name in sensors:
+                                if time - sensors[name][0][-1] > 0.08333333333333393:
+                                    sensors[name][0].append(time - 0.08)
+                                    sensors[name][1].append(float('Inf'))
                                 sensors[name][0].append(time)
                                 sensors[name][1].append(float(temp[3]))
                             else:

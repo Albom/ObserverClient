@@ -3,6 +3,8 @@ from PyQt5 import QtCore
 from datetime import datetime
 from smtplib import SMTP_SSL
 from email.message import EmailMessage
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 
 # https://gist.github.com/turicas/1455741
 
@@ -32,15 +34,21 @@ class ThreadMail(QtCore.QThread):
         """run() - основная функция потока."""
         begin = datetime.now()
         message = EmailMessage()
+        # message = MIMEMultipart()
         message['From'] = self.username
         message['To'] = self.address
         message['Subject'] = 'Мониторинг радара.'
         message.set_content(self.name)
         try:
+            # file_name = '{}\\{}.png'.format(self.path, self.name)
             with open('{}\\{}.png'.format(self.path, self.name), 'rb') as file:
                 img = file.read()
-                message.add_attachment(img, maintype='image', subtype='png')
+                img = MIMEImage(img)
+                img.add_header('Content-Disposition', 'attachment', filename='{}.png'.format(self.name))
 
+                # message.add_attachment(img, maintype='image', subtype='png')
+                message.attach(MIMEImage(img))
+                print(message)
                 with SMTP_SSL(self.url, self.port, timeout=10) as server:
                     server.ehlo()
                     server.login(self.username, self.password)

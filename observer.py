@@ -315,9 +315,9 @@ class Observer(QtCore.QObject):
                     #if line != ' ':
                         temp = line.split(' ')
                         if len(temp) == 2:
-                            #temp[1] = temp[1].replace('\0', '');
-                            #temp[1] = temp[1].replace('\n', '');
-                            temp[1] = temp[1].replace('\r', '');
+                            #temp[1] = temp[1].replace('\0', '')
+                            #temp[1] = temp[1].replace('\n', '')
+                            temp[1] = temp[1].replace('\r', '')
                             if temp[0] in self.sensors.keys():
                                 self.sensors[temp[0]].value = temp[1]
                                 #sprint('"{}" "{}"'.format(temp[0], temp[1]));
