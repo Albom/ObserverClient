@@ -33,29 +33,28 @@ class ThreadMail(QtCore.QThread):
     def run(self):
         """run() - основная функция потока."""
         begin = datetime.now()
-        message = EmailMessage()
-        # message = MIMEMultipart()
+        # message = EmailMessage()
+        message = MIMEMultipart()
         message['From'] = self.username
         message['To'] = self.address
         message['Subject'] = 'Мониторинг радара.'
-        message.set_content(self.name)
+        # message.set_content(self.name)
         try:
             # file_name = '{}\\{}.png'.format(self.path, self.name)
             with open('{}\\{}.png'.format(self.path, self.name), 'rb') as file:
                 img = file.read()
                 img = MIMEImage(img)
                 img.add_header('Content-Disposition', 'attachment', filename='{}.png'.format(self.name))
-
-                # message.add_attachment(img, maintype='image', subtype='png')
-                message.attach(MIMEImage(img))
-                print(message)
+                # message.add_attachment(img)
+                message.attach(img)
                 with SMTP_SSL(self.url, self.port, timeout=10) as server:
                     server.ehlo()
                     server.login(self.username, self.password)
                     server.send_message(message)
                 end = datetime.now()
                 self.mailReceived.emit('Email sent.', self.deltaTimeStr(begin, end))
-        except:
+        except Exception as e:
+            print(e)
             end = datetime.now()
             self.mailFailed.emit('Email don`t sent!', begin, self.deltaTimeStr(begin, end))
 
