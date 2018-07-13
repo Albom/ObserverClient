@@ -116,8 +116,8 @@ class MainWindow(QMainWindow):
         self.table.setHorizontalHeaderLabels(['Val', 'Name', 'Address'])
         self.table.verticalHeader().setFixedWidth(20)
         self.table.verticalHeader().setDefaultAlignment(Qt.AlignRight)
-        self.table.itemClicked.connect(self.checkItemSave)
-        self.table.itemChanged.connect(self.itemSave)
+        # self.table.itemClicked.connect(self.checkItemSave)
+        # self.table.itemChanged.connect(self.itemSave)
         
         grid = QGridLayout()
         grid.setSpacing(3)

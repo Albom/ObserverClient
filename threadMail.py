@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import os
 from PyQt5 import QtCore
 from datetime import datetime
 from smtplib import SMTP_SSL
@@ -14,16 +15,36 @@ class ThreadMail(QtCore.QThread):
     mailFailed = QtCore.pyqtSignal(str, datetime, str)         
 
     # def __init__(self, username, password, address):
-    def __init__(self):
+    def __init__(self, path):
         """__init__()"""
         super().__init__()
-        self.username = ''
-        self.password = ''
-        self.address = ''
+        self.config = path
+        self.configRead()
+        # print(self.username)
+        # print(self.password)
+        # print(self.address)
+
         if not self.username or not self.password or not self.address:
             raise ValueError('Empty email username, password or address!')
         self.url = 'smtp.gmail.com'
         self.port = 465
+
+
+    def configRead(self):
+        """configRead()"""
+        if os.path.exists(self.config):
+            try:
+                with open(self.config, 'r', encoding="utf-8") as file:
+                    self.username = file.readline().strip()
+                    self.password = file.readline().strip()
+                    self.address = file.readline().strip()
+            except Exception as error:
+                print(error)
+                self.username = ''
+                self.password = ''
+                self.address = ''
+        else:
+            os.makedirs(self.config, 0o777, True)
 
 
     def set_path(self, pathData, currentDate):

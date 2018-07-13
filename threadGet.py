@@ -23,7 +23,7 @@ class ThreadGet(QtCore.QThread):
         """run() - основная функция потока."""
         try:
             timeBegin = datetime.now()
-            request = requests.get('http://{0}'.format(self.address))
+            request = requests.get('http://{0}'.format(self.address), timeout=(10, 10))
             timeEnd = datetime.now()
             delta = self.deltaTimeStr(timeBegin, timeEnd)
             if request.status_code == 200:

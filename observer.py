@@ -37,7 +37,7 @@ class Observer(QtCore.QObject):
         self.countPeriod = 2
         self.threads = []
         self.emails = ((12, 0),)
-        self.email = threadMail.ThreadMail()
+        self.email = threadMail.ThreadMail(self.pathEmails)
         self.email.mailReceived.connect(self.mailReceivedEvent)
         self.email.mailFailed.connect(self.mailFailedEvent)
 

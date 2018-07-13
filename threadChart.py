@@ -78,14 +78,18 @@ class ThreadChart(QtCore.QThread):
                                 name = temp[2]
                             else:
                                 name = temp[1]
+                            try:
+                                value = float(temp[3])
+                            except:
+                                value = float('Inf')
                             if name in sensors:
                                 if time - sensors[name][0][-1] > 0.08333333333333393:
                                     sensors[name][0].append(time - 0.08)
                                     sensors[name][1].append(float('Inf'))
                                 sensors[name][0].append(time)
-                                sensors[name][1].append(float(temp[3]))
+                                sensors[name][1].append(value)
                             else:
-                                sensors[name] = [[time], [float(temp[3])]]
+                                sensors[name] = [[time], [value]]
 
                 self.fig1.set_title(self.name, loc='left')
                 self.fig1.set_title('Температура', fontsize = 20)
@@ -122,7 +126,6 @@ class ThreadChart(QtCore.QThread):
                 self.fig2.set_title('Энергопотребление', fontsize = 20)
                 self.fig2.set_xticks(range(0, 25))
                 self.fig2.set_xlim(0, 24)
-                self.fig2.set_ylim(ymin=0)
                 self.fig2.set_xlabel('Время')
                 self.fig2.set_ylabel('Вт')
                 self.fig2.grid(True, which = 'major', color = 'grey')
