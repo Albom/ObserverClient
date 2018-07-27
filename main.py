@@ -1,4 +1,7 @@
-#!/usr/bin/python3
+# Copyright © 2018 Stanislav Hnatiuk.  All rights reserved.
+
+# !/usr/bin/env python3
+
 import sys
 from PyQt5.QtWidgets import QApplication
 
