@@ -65,7 +65,7 @@ class Observer(QtCore.QObject):
             self.checkCurrentDay(now)
             self.configSave()
             self.logged.emit(
-                '{} Observation started:'.format(now.strftime('%H:%M:%S')),
+                '{} Observation started'.format(now.strftime('%H:%M:%S')),
                 'lf'
             )
             self.read()
@@ -113,7 +113,7 @@ class Observer(QtCore.QObject):
         self.requestsFailedCount = 0
         timeBegin = datetime.now()
         self.logged.emit(
-            '\n{0} Sending requests:'.format(timeBegin.strftime('%H:%M:%S')),
+            '{0} Sending requests\n'.format(timeBegin.strftime('%H:%M:%S')),
             'l'
         )
         self.logged.emit('Sending requests...', 's')
@@ -239,6 +239,8 @@ class Observer(QtCore.QObject):
         if os.path.exists(self.pathSensors):
             try:
                 fileList = os.listdir(self.pathSensors)
+                self.sensors.clear()
+                self.groups.clear()
                 for fileName in fileList:
                     with open(
                         '{}/{}'.format(self.pathSensors, fileName),
@@ -347,7 +349,7 @@ class Observer(QtCore.QObject):
                             if temp[0] in self.sensors.keys():
                                 self.sensors[temp[0]].value = temp[1]
                             else:
-                                group = 'Unknown'
+                                group = 'unknown'
                                 ss = sensor.Sensor(
                                     temp[0],
                                     group,

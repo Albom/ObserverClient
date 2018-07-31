@@ -8,6 +8,7 @@ from datetime import datetime
 from smtplib import SMTP_SSL
 from email.message import EmailMessage
 from email.mime.image import MIMEImage
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 
 
@@ -128,13 +129,14 @@ class ThreadMail(QtCore.QThread):
                     else:
                         path = self.prevPath
                         name = self.prevName
-                    with open('{}\\{}.png'.format(path, name), 'rb') as file:
+                    with open('{}\\{}.pdf'.format(path, name), 'rb') as file:
                         img = file.read()
-                        img = MIMEImage(img)
+                        # img = MIMEImage(img)
+                        img = MIMEApplication(img)
                         img.add_header(
                             'Content-Disposition',
                             'attachment',
-                            filename='{}.png'.format(self.name))
+                            filename='{}.pdf'.format(self.name))
                         message.attach(img)
                         with SMTP_SSL(self.url, self.port, timeout=10) as serv:
                             serv.ehlo()

@@ -349,9 +349,9 @@ class MainWindow(QMainWindow):
 
         f - запись в файл."""
         if 'l' in modes:
-            self.textEditList.append(log)
+            self.textEditList.appendleft(log)
             self.textEdit.clear()
-            self.textEdit.append('\n'.join(self.textEditList))
+            self.textEdit.setText('\n'.join(self.textEditList))
 
         if 's' in modes:
             self.statusBar().showMessage(log)

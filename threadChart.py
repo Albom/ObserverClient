@@ -21,7 +21,7 @@ class ThreadChart(QtCore.QThread):
         super().__init__()
 
         # Настройка изображения
-        self.fig = plt.figure(figsize=(16, 24), dpi=120)    # (10, 15), 128
+        self.fig = plt.figure(figsize=(10, 15), dpi=128)
         # График температур
         self.fig1 = self.fig.add_subplot(311)
 
@@ -30,6 +30,9 @@ class ThreadChart(QtCore.QThread):
 
         # График ресурсов
         self.fig3 = self.fig.add_subplot(313)
+
+        # График неопределённых датчиков
+        # self.fig4 = self.fig.add_subplot(414)
 
         self.cssColors = (
             'red', 'green', 'blue', 'brown', 'cyan', 'violet', 'darkred',
@@ -92,8 +95,10 @@ class ThreadChart(QtCore.QThread):
                             ) / 3600
                             if temp[2] != 'No name':
                                 name = temp[2]
+                                description = '{} ({})'.format(temp[2], temp[1][-4:])
                             else:
                                 name = temp[1]
+                                description = temp[1]
                             try:
                                 value = float(temp[3])
                             except ValueError:
@@ -108,7 +113,7 @@ class ThreadChart(QtCore.QThread):
                                 sensors[name][0].append(time)
                                 sensors[name][1].append(value)
                             else:
-                                sensors[name] = [[time], [value]]
+                                sensors[name] = [[time], [value], description]
 
                 # Настрйоки фигуры для графика температур.
                 self.fig1.set_title(self.name, loc='left')
@@ -124,27 +129,28 @@ class ThreadChart(QtCore.QThread):
                 keycount = 0
                 ymax = -100
                 ymin = 100
-                for key in sensors.keys():
-                    if key in sensorsList['temperature']:
-                        self.fig1.plot(
-                            sensors[key][0],
-                            sensors[key][1],
-                            color=self.cssColors[iclr],
-                            label=key,
-                            alpha=0.7
-                        )
-                        t_max = max(sensors[key][1])
-                        t_min = min(sensors[key][1])
-                        if t_max > ymax:
-                            ymax = t_max
-                        if t_min < ymin:
-                            ymin = t_min
-                        iclr += 1
-                        keycount += 1
-                        if iclr == len(self.cssColors):
-                            iclr = 0
-                if keycount:
-                    self.fig1.legend()
+                if 'temperature' in sensorsList:
+                    for key in sensors.keys():
+                        if key in sensorsList['temperature']:
+                            self.fig1.plot(
+                                sensors[key][0],
+                                sensors[key][1],
+                                color=self.cssColors[iclr],
+                                label=sensors[key][2],
+                                alpha=0.7
+                            )
+                            t_max = max(sensors[key][1])
+                            t_min = min(sensors[key][1])
+                            if t_max > ymax:
+                                ymax = t_max
+                            if t_min < ymin:
+                                ymin = t_min
+                            iclr += 1
+                            keycount += 1
+                            if iclr == len(self.cssColors):
+                                iclr = 0
+                    if keycount:
+                        self.fig1.legend()
 
                 # Настрйоки фигуры для графика энергопотребления.
                 self.fig2.set_title(self.name, loc='left')
@@ -158,21 +164,22 @@ class ThreadChart(QtCore.QThread):
                 # Отрисовка графика температур.
                 iclr = 0
                 keycount = 0
-                for key in sensors.keys():
-                    if key in sensorsList['consumtion']:
-                        self.fig2.plot(
-                            sensors[key][0],
-                            sensors[key][1],
-                            color=self.cssColors[iclr],
-                            label=key,
-                            alpha=0.7
-                        )
-                        iclr += 1
-                        keycount += 1
-                        if iclr == len(self.cssColors):
-                            iclr = 0
-                if keycount:
-                    self.fig2.legend()
+                if 'consumtion' in sensorsList:
+                    for key in sensors.keys():
+                        if key in sensorsList['consumtion']:
+                            self.fig2.plot(
+                                sensors[key][0],
+                                sensors[key][1],
+                                color=self.cssColors[iclr],
+                                label=sensors[key][2],
+                                alpha=0.7
+                            )
+                            iclr += 1
+                            keycount += 1
+                            if iclr == len(self.cssColors):
+                                iclr = 0
+                    if keycount:
+                        self.fig2.legend()
 
                 # Настрйоки фигуры для графика ресурсов компьютера.
                 self.fig3.set_title(self.name, loc='left')
@@ -188,40 +195,73 @@ class ThreadChart(QtCore.QThread):
                 # Отрисовка графика ресурсов.
                 iclr = 0
                 keycount = 0
-                for key in sensors.keys():
-                    if key in sensorsList['resources']:
-                        self.fig3.plot(
-                            sensors[key][0],
-                            sensors[key][1],
-                            color=self.cssColors[iclr],
-                            label=key,
-                            alpha=0.7
-                        )
-                        iclr += 1
-                        keycount += 1
-                        if iclr == len(self.cssColors):
-                            iclr = 0
-                if keycount:
-                    self.fig3.legend()
+                if 'resources' in sensorsList:
+                    for key in sensors.keys():
+                        if key in sensorsList['resources']:
+                            self.fig3.plot(
+                                sensors[key][0],
+                                sensors[key][1],
+                                color=self.cssColors[iclr],
+                                label=sensors[key][2],
+                                alpha=0.7
+                            )
+                            iclr += 1
+                            keycount += 1
+                            if iclr == len(self.cssColors):
+                                iclr = 0
+                    if keycount:
+                        self.fig3.legend()
+
+                # # Настрйоки фигуры для графика неопределённых датчиков.
+                # self.fig4.set_title(self.name, loc='left')
+                # self.fig4.set_title('Неопределённые', fontsize=20)
+                # self.fig4.set_xticks(range(0, 25))
+                # self.fig4.set_xlim(0, 24)
+                # self.fig4.set_xlabel('Время')
+                # self.fig4.set_ylabel('Значение')
+                # self.fig4.grid(True, which='major', color='grey')
+                # self.fig4.grid(True, which='minor', color='lightgrey')
+                # # Отрисовка графика ресурсов.
+                # if 'unknown' in sensorsList:
+                #     iclr = 0
+                #     keycount = 0
+                #     for key in sensors.keys():
+                #         if key in sensorsList['unknown']:
+                #             self.fig4.plot(
+                #                 sensors[key][0],
+                #                 sensors[key][1],
+                #                 color=self.cssColors[iclr],
+                #                 label=sensors[key][2],
+                #                 alpha=0.7
+                #             )
+                #             iclr += 1
+                #             keycount += 1
+                #             if iclr == len(self.cssColors):
+                #                 iclr = 0
+                #     if keycount:
+                #         self.fig4.legend()
 
                 # Обрезка и сохранение в файл.
                 self.fig.tight_layout()
-                self.fig.savefig('{}\\{}.png'.format(self.pathData, self.name))
-                
+                # self.fig.savefig('{}\\{}.png'.format(self.pathData, self.name))
+                self.fig.savefig('{}\\{}.pdf'.format(self.pathData, self.name))
+
                 # Очистка фигур.
                 self.fig1.clear()
                 self.fig2.clear()
                 self.fig3.clear()
+                # self.fig4.clear()
                 # sensors.clear()
                 # sensorsList.clear()
                 # del gc.garbage[:]
-                self.chartSaved.emit('Chart saved to {}.png'.format(self.name))
+                self.chartSaved.emit('Chart saved to {}.pdf'.format(self.name))
 
             except Exception as e:
                 print(e)
                 self.fig1.clear()
                 self.fig2.clear()
                 self.fig3.clear()
+                # self.fig4.clear()
                 # del gc.garbage[:]
                 self.chartSaved.emit('Chart not saved!')
         # del gc.garbage[:]
