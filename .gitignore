@@ -305,3 +305,7 @@ data/
 *.csv
 *.png
 *.log
+
+.project
+.pydevproject
+.settings/
