@@ -1,5 +1,5 @@
 # Original work Copyright © 2018 Stanislav Hnatiuk
-# Modified work Copyright 2018 Oleksandr Bogomaz
+# Modified work Copyright 2018-2019 Oleksandr Bogomaz
 
 # !/usr/bin/env python3
 
@@ -9,6 +9,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import colors
+from matplotlib.backends.backend_pdf import PdfPages
 import os
 
 
@@ -19,24 +20,6 @@ class ThreadChart(QtCore.QThread):
     def __init__(self):
         """Инициализация потока."""
         super().__init__()
-
-        # Настройка изображения
-        self.fig = plt.figure(figsize=(10, 15), dpi=128)
-        # График температур
-        self.fig1 = self.fig.add_subplot(311)
-
-        box = self.fig1.get_position()
-        self.fig1.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-		
-        # График энергопотребления
-        self.fig2 = self.fig.add_subplot(312)
-        box = self.fig2.get_position()
-        self.fig2.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-		
-        # График ресурсов
-        self.fig3 = self.fig.add_subplot(313)
-        box = self.fig3.get_position()
-        self.fig3.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
         self.cssColors = ('#000000', '#0000AA', '#00AA00', '#00AAAA', '#AA0000',
              '#AA00AA', '#AA5500', '#555555', '#5555FF', '#55FF55',
@@ -105,7 +88,7 @@ class ThreadChart(QtCore.QThread):
                             if name in sensors:
                                 # Добавление пропуска если нет данных
                                 # в течении пяти минут ().
-                                if time - sensors[name][0][-1] > 0.08333333334:
+                                if time - sensors[name][0][-1] > 5.0/60.0:
                                     sensors[name][0].append(time - 0.08)
                                     sensors[name][1].append(float('Inf'))
                                 sensors[name][0].append(time)
@@ -113,127 +96,140 @@ class ThreadChart(QtCore.QThread):
                             else:
                                 sensors[name] = [[time], [value], description]
 
-                # Настрйоки фигуры для графика температур.
-                self.fig1.set_title(self.name, loc='left')
-                self.fig1.set_title('Температура', fontsize=20)
-                self.fig1.set_xticks(range(0, 25))
-                self.fig1.set_xlim(0, 24)
-                self.fig1.set_xlabel('Время')
-                self.fig1.set_ylabel('°C')
-                self.fig1.grid(True, which='major', color='grey')
-                self.fig1.grid(True, which='minor', color='lightgrey')
-                # Отрисовка графика температур.
-                iclr = 0
-                keycount = 0
-                ymax = -100
-                ymin = 100
-                if 'temperature' in sensorsList:
-                    keys = list(sensors.keys())
-                    keys.sort()
-                    for key in keys:
-                        if key in sensorsList['temperature']:
-                            self.fig1.plot(
-                                sensors[key][0],
-                                sensors[key][1],
-                                color=self.cssColors[iclr],
-                                label=sensors[key][2],
-                                alpha=1
-                            )
-                            t_max = max(sensors[key][1])
-                            t_min = min(sensors[key][1])
-                            if t_max > ymax:
-                                ymax = t_max
-                            if t_min < ymin:
-                                ymin = t_min
-                            iclr += 1
-                            keycount += 1
-                            if iclr == len(self.cssColors):
-                                iclr = 0
-                    if keycount:
-                        self.fig1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+                with PdfPages('{}\\{}.pdf'.format(self.pathData, self.name)) as pdf:
+                
+                    fig = plt.figure(figsize=(10, 15), dpi=128)
+                    # График температур
+                    fig1 = fig.add_subplot(111)
 
-                # Настрйоки фигуры для графика энергопотребления.
-                self.fig2.set_title(self.name, loc='left')
-                self.fig2.set_title('Энергопотребление', fontsize=20)
-                self.fig2.set_xticks(range(0, 25))
-                self.fig2.set_xlim(0, 24)
-                self.fig2.set_xlabel('Время')
-                self.fig2.set_ylabel('Вт')
-                self.fig2.grid(True, which='major', color='grey')
-                self.fig2.grid(True, which='minor', color='lightgrey')
+                    fig1.set_title(self.name, loc='left')
+                    fig1.set_title('Температура', fontsize=20)
+                    fig1.set_xticks(range(0, 25))
+                    fig1.set_xlim(0, 24)
+                    fig1.set_xlabel('Время')
+                    fig1.set_ylabel('°C')
+                    fig1.grid(True, which='major', color='grey')
+                    fig1.grid(True, which='minor', color='lightgrey')
 
-                # Отрисовка графика температур.
-                iclr = 0
-                keycount = 0
-                if 'consumtion' in sensorsList:
-                    keys = list(sensors.keys())
-                    keys.sort()
-                    for key in keys:
-                        if key in sensorsList['consumtion']:
-                            self.fig2.plot(
-                                sensors[key][0],
-                                sensors[key][1],
-                                color=self.cssColors[iclr],
-                                label=sensors[key][2],
-                                alpha=1
-                            )
-                            iclr += 1
-                            keycount += 1
-                            if iclr == len(self.cssColors):
-                                iclr = 0
-                    if keycount:
-                        #box = self.fig2.get_position()
-                        #self.fig2.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-                        self.fig2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+                    # Отрисовка графика температур.
+                    iclr = 0
+                    keycount = 0
+                    ymax = -100
+                    ymin = 100
+                    if 'temperature' in sensorsList:
+                        keys = list(sensors.keys())
+                        keys.sort()
+                        for key in keys:
+                            if key in sensorsList['temperature']:
+                                fig1.plot(
+                                    sensors[key][0],
+                                    sensors[key][1],
+                                    color=self.cssColors[iclr],
+                                    label=sensors[key][2],
+                                    alpha=1
+                                )
+                                t_max = max(sensors[key][1])
+                                t_min = min(sensors[key][1])
+                                if t_max > ymax:
+                                    ymax = t_max
+                                if t_min < ymin:
+                                    ymin = t_min
+                                iclr += 1
+                                keycount += 1
+                                if iclr == len(self.cssColors):
+                                    iclr = 0
+                        if keycount:
+                            fig1.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1))
 
-                # Настрйоки фигуры для графика ресурсов компьютера.
-                self.fig3.set_title(self.name, loc='left')
-                self.fig3.set_title('Нагрузка', fontsize=20)
-                self.fig3.set_xticks(range(0, 25))
-                self.fig3.set_yticks(range(0, 110, 10))
-                self.fig3.set_xlim(0, 24)
-                self.fig3.set_ylim(0, 100)
-                self.fig3.set_xlabel('Время')
-                self.fig3.set_ylabel('%')
-                self.fig3.grid(True, which='major', color='grey')
-                self.fig3.grid(True, which='minor', color='lightgrey')
-                # Отрисовка графика ресурсов.
-                iclr = 0
-                keycount = 0
-                if 'resources' in sensorsList:
-                    keys = list(sensors.keys())
-                    keys.sort()
-                    for key in keys:
-                        if key in sensorsList['resources']:
-                            self.fig3.plot(
-                                sensors[key][0],
-                                sensors[key][1],
-                                color=self.cssColors[iclr],
-                                label=sensors[key][2],
-                                alpha=1
-                            )
-                            iclr += 1
-                            keycount += 1
-                            if iclr == len(self.cssColors):
-                                iclr = 0
-                    if keycount:
-                        #box = self.fig3.get_position()
-                        #self.fig3.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-                        self.fig3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+                    plt.subplots_adjust(bottom=0.3)
+                    pdf.savefig(fig)
+                    plt.close()
+                    
+                    fig = plt.figure(figsize=(10, 15), dpi=128)
+                    plt.subplots_adjust(hspace=0.6)
 
+                    figs = [0]*6
+                    for i in range(6):
+                        figs[i] = fig.add_subplot(6, 1, i+1)
 
-                # Сохранение в файл.
-                self.fig.savefig('{}\\{}.pdf'.format(self.pathData, self.name))
+                        # Настройки фигуры для графика энергопотребления.
+                        figs[i].set_title(self.name, loc='left')
+                        figs[i].set_xticks(range(0, 25))
+                        figs[i].set_xlim(0, 24)
+                        figs[i].set_xlabel('Время')
+                        figs[i].set_ylim(0, 2000)
+                        figs[i].set_ylabel('Вт')
+                        figs[i].grid(True, which='major', color='grey')
+                        figs[i].grid(True, which='minor', color='lightgrey')
 
-                # Очистка фигур.
-                self.fig1.clear()
-                self.fig2.clear()
-                self.fig3.clear()
-                self.chartSaved.emit('Chart is saved to {}.pdf'.format(self.name))
+                        # Отрисовка графика энергопотребления.
+                        iclr = 0
+                        keycount = 0
+                        if 'consumtion' in sensorsList:
+                            keys = list(sensors.keys())
+                            keys.sort()
+                            for key in keys:
+                                if key in sensorsList['consumtion']:
+                                    if list(sensorsList['consumtion']).index(sensors[key][2].split('(')[0][:-1])//2 == i:
+                                        figs[i].plot(
+                                            sensors[key][0],
+                                            sensors[key][1],
+                                            color=self.cssColors[iclr],
+                                            label=sensors[key][2],
+                                            alpha=1
+                                        )
+                                        figs[i].set_title(sensors[key][2], fontsize=10)
+                                        iclr += 1
+                                        keycount += 1
+                                        if iclr == len(self.cssColors):
+                                            iclr = 0
+                    plt.subplots_adjust()
+                    pdf.savefig(fig)
+                    plt.close()
+
+                    fig = plt.figure(figsize=(10, 15), dpi=128)
+
+                    fig3 = fig.add_subplot(111)
+
+                    # Настройки фигуры для графика ресурсов компьютера.
+                    fig3.set_title(self.name, loc='left')
+                    fig3.set_title('Нагрузка', fontsize=20)
+                    fig3.set_xticks(range(0, 25))
+                    fig3.set_yticks(range(0, 110, 10))
+                    fig3.set_xlim(0, 24)
+                    fig3.set_ylim(0, 100)
+                    fig3.set_xlabel('Время')
+                    fig3.set_ylabel('%')
+                    fig3.grid(True, which='major', color='grey')
+                    fig3.grid(True, which='minor', color='lightgrey')
+                    # Отрисовка графика ресурсов.
+                    iclr = 0
+                    keycount = 0
+                    if 'resources' in sensorsList:
+                        keys = list(sensors.keys())
+                        keys.sort()
+                        for key in keys:
+                            if key in sensorsList['resources']:
+                                fig3.plot(
+                                    sensors[key][0],
+                                    sensors[key][1],
+                                    color=self.cssColors[iclr],
+                                    label=sensors[key][2],
+                                    alpha=1
+                                )
+                                iclr += 1
+                                keycount += 1
+                                if iclr == len(self.cssColors):
+                                    iclr = 0
+                        if keycount:
+                            fig3.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1))
+
+                    plt.subplots_adjust(bottom=0.17)
+                    pdf.savefig(fig)
+                    plt.close()
+
+                    self.chartSaved.emit('Chart is saved to {}.pdf'.format(self.name))
 
             except Exception as e:
                 print(e)
-                self.fig1.clear()
-                self.fig2.clear()
-                self.fig3.clear()
                 self.chartSaved.emit('Chart is not saved!')
